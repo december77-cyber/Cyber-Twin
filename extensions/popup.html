@@ -1,5 +1,41 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <style>body {
+        width: 320px;
+        padding: 16px;
+        background-color: #121212;
+        color: #ffffff;
+        font-family: system-ui, sans-serif;
+        }
+
+        #UsrInput {
+            width: 100%;
+            box-sizing: border-box;
+            height: 80px;
+            resize: vertical;
+            background-color: #1e1e1e;
+            color: #ffffff;
+            border-radius: 6px;
+        }
+
+        #ScanButton {
+            width: 100%;
+            padding: 10px;
+            cursor: pointer;
+            background-color: #00e676;
+            border: #00e676;
+        }
+
+        #Output {
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #1e1e1e;
+            white-space: pre-wrap;
+        }
+
+    </style>
+</head>
 <body>
     <textarea id="UsrInput" placeholder="Type your text here: "></textarea>
     <button id="ScanButton">Scan Button</button>

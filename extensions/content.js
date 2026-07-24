@@ -16,5 +16,5 @@ button.addEventListener("click", async() => {
 
     const response = await fetch(request)
     const data = await response.json()
-    console.log(data)
+    output.innerText = data.assessment
 })
