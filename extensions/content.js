@@ -8,18 +8,28 @@ console.log("Cyber Twin is working...")
 
 const callback = (mutationList, observer) => {
 
+    const input_return = (event) => {
+        const users_input = event.target.innerText
+        list.push(users_input)
+        console.log(users_input)
+
+    }
+
     for (const mutation of  mutationList) {
         if (mutation.type === "childList") {
             for (let node of mutation.addedNodes) {
                 if (node.nodeType === Node.ELEMENT_NODE) {
-                    if (node.matches('[data-testid^="tweetTextarea"]')) {
+                    if (node.matches('[data-testid^="tweetTextarea"][role="textbox"]')) {
+                        node.addEventListener('input',input_return)
                         list.push(node)
                         console.log("Found compose box directly:", node)
                 }
                     else {
-                        const targetInput = node.querySelector?.('[data-testid^="tweetTextarea"][role="textbox]');
+                        const targetInput = node.querySelector?.('[data-testid^="tweetTextarea"][role="textbox"]');
                         if (targetInput) {
-                        console.log("Found compose box indirectly:", targetInput)
+                        targetInput.addEventListener('input', input_return)
+                        list.push(targetInput)
+                        console.log("Found compose box indirectly:",targetInput)
 
                         }
                     }
