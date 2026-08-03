@@ -13,19 +13,13 @@ const input_return = (event) => {
     timer = setTimeout(async () => { 
         const users_input = event.target.innerText
         list.push(users_input)
-        
-    const request = new Request(url, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body : JSON.stringify({
-            "text": users_input,
-            "platform" : "Web"})
-    })
 
-    const response = await fetch(request)
-    const data = await response.json()
-    output.innerText = data.assessment
-},500)
+        chrome.runtime.sendMessage({action: "ANALYZE_TEXT", payload: users_input},
+            (response) => {
+                console.log("Assessment from Cyber Twin:", response?.assesment)
+            }
+        )
+        },500)
 
     }
 

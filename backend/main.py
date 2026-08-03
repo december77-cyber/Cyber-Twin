@@ -1,19 +1,37 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Header, Request, Response
 from pydantic import BaseModel
 import ollama
-from fastapi.middleware.cors import CORSMiddleware
+# from fastapi.middleware.cors import CORSMiddleware
 
 users_inputs = []
 
 app = FastAPI()
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+# app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 class CheckInput(BaseModel):
     text: str
     platform: str  
 
+@app.middleware("http")
+async def gather_data(request: Request, call_next):
+    if request.method == "OPTIONS":
+        response = Response(status_code=200)
+        response.headers['Access-Control-Allow-Origin'] = 'chrome-extension://jlinonccpgnaeggknafjegnpnjpbickm'
+        response.headers['Access-Control-Allow-Methods'] = '*'
+        response.headers['Access-Control-Allow-Headers'] = "Cyber-Twin-Key, Content-Type"
+
+        return response
+
+
+    response = await(call_next(request))
+    response.headers['Access-Control-Allow-Origin'] = 'chrome-extension://jlinonccpgnaeggknafjegnpnjpbickm'
+    return response
+
 @app.post("/analyze-post")
-def analyze_post(data: CheckInput):
+def analyze_post(data: CheckInput, cyber_twin_key= Header(alias="Cyber-Twin-Key")):
+    if cyber_twin_key != 'skibidi':
+        raise HTTPException(status_code=401, detail="Unauthorized access denied")
+
     users_inputs.append(data)
     print(f"Data gathered succesfully")
     print(f"Users text: {data.text}, platform: {data.platform}")
