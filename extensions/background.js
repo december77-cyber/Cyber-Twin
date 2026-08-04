@@ -18,6 +18,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const output = data.assessment
 
         console.log(sender)
+        chrome.storage.local.set({
+            "latestAssessment": output,
+            "lastUpdated": Date()
+        })
         sendResponse({success: true, assessment: output})
     }
 

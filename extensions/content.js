@@ -16,7 +16,7 @@ const input_return = (event) => {
 
         chrome.runtime.sendMessage({action: "ANALYZE_TEXT", payload: users_input},
             (response) => {
-                console.log("Assessment from Cyber Twin:", response?.assesment)
+                console.log("Assessment from Ccyber Twin:", response?.assessment)
             }
         )
         },500)
