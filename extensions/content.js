@@ -16,7 +16,17 @@ const input_return = (event) => {
 
         chrome.runtime.sendMessage({action: "ANALYZE_TEXT", payload: users_input},
             (response) => {
-                console.log("Assessment from Ccyber Twin:", response?.assessment)
+                if (!(document.getElementById('cyber-twin-response'))) {
+                const twinResponse = document.createElement('div');
+                twinResponse.style.cssText = "position: fixed; top: 24px; right: 24px; z-index: 999999; opacity: 0.88; background-color: #121212; color: #00ffcc; border: 1px solid #00ffcc; padding: 16px; border-radius: 16px; max-width: 400px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); white-space: pre-wrap; font-family: monospace; font-size: 18px;"
+                twinResponse.className = 'cyber-twin-assessment';
+                twinResponse.id = 'cyber-twin-response'
+                twinResponse.innerText = response?.assessment
+                document.body.appendChild(twinResponse)
+
+                console.log("Assessment from Cyber Twin:", response?.assessment)
+
+                }
             }
         )
         },500)
