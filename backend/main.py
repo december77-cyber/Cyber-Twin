@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Header, Request, Response, Depends
 from pydantic import BaseModel
 import ollama
-from sqlmodel import Session, create_engine, Field, select, or_
+from sqlmodel import SQLModel, Session, create_engine, Field, select, or_
 from sub_models import UserData, Location, Relations, Assets, Schedule
 
 users_inputs = []
@@ -14,6 +14,7 @@ class CheckInput(BaseModel):
 
 dataBaseURL = "sqlite:///./database.db"
 engine = create_engine(dataBaseURL, connect_args={"check_same_thread": False}, echo=True)
+SQLModel.metadata.create_all(engine)
 
 
 def get_session():
@@ -79,6 +80,11 @@ def analyze_post(data: CheckInput, cyber_twin_key= Header(alias="Cyber-Twin-Key"
     users_inputs.append(data)
     print(f"Data gathered succesfully")
     print(f"Users text: {data.text}, platform: {data.platform}")
+
+
+    user_context = create_user_context(session)
+
+    print(f"User context created successfully: {user_context}")
     
     response = ollama.chat(
     model='llama3.1:8b',
@@ -91,6 +97,14 @@ def analyze_post(data: CheckInput, cyber_twin_key= Header(alias="Cyber-Twin-Key"
     "Take into account mainly the draft/ current users input but be also be aware of all other data prevously collected from the user."
     "Your mission is also to analyze user-generated text and extract all inadvertent leaks of personal data, routine patterns, and physical security vulnerabilities."
     """### EXTRACTION GUIDELINES:
+
+    You are Cyber Twin, a personal OPSEC and cybersecurity guardian.
+
+    Your mission is two-fold:
+    0. RISK EVALUATION: Assess the OPSEC risk of the draft post. You must populate:
+    - `risk_level`: Choose strictly between "LOW", "MEDIUM", or "HIGH".
+    - `cyber_twin_response`: A direct, sharp 1-2 sentence explanation of the specific security or privacy hazard.
+    - `suggested_fix`: A safe rewrite of the post or specific instructions on what details to omit.
 
     1. LOCATIONS:
     - Extract all geographic references, venues, landmarks, businesses, or home/office indicators.
@@ -121,28 +135,34 @@ def analyze_post(data: CheckInput, cyber_twin_key= Header(alias="Cyber-Twin-Key"
             'role': 'user', 
             'content': f"""Analyze this social media draft intended for the platform: {data.platform}.
 Identify any security, privacy, or personal safety risks (such as vacation plans indicating an empty house, location leaks, work projects 
-disclosing intellectual property, family or pet names used in security questions).
+disclosing intellectual property, family or pet names used in security questions). Your job is also Evaluating the risk (risk_level, cyber_twin_response, suggested_fix).
+Extracting every identified entity into locations, relationships, assets, and schedule.
 
 Draft to analyze: "{data.text}"
-User data that you should take into account: are in file "{create_user_context(Session)}"
-
-You MUST format your response exactly using this Markdown layout:
-### 🛡️ Cyber Twin Risk Assessment
-**Risk Level:** [Low | Medium | High]
-
-**Why:** [Briefly explain the security or privacy hazard in 1-2 sharp sentences]
-
-**Suggested Fix:** [Provide an alternative way to write this post that hides the risk, or give advice on what to delete]
+User data that you should take into account: are in here "{user_context}"
 """
         }
     ]
 )
     
     ai_analysis = response['message']['content']
+    ai_analysis = UserData.model_validate_json(ai_analysis)
+
+    for location in ai_analysis.locations:
+        session.add(location)
+    for relation in ai_analysis.relationships:
+        session.add(relation)
+    for asset in ai_analysis.assets:
+        session.add(asset)
+    for schedule in ai_analysis.schedule:
+        session.add(schedule)
+    session.commit()
+
+    print(f"AI analysis completed successfully: {ai_analysis}")
 
     return {
         "status": "success",
         "platform_analyzed": data.platform,
-        "assessment": ai_analysis 
+        "assessment": f"{ai_analysis.cyber_twin_response}\nRisk Level: {ai_analysis.risk_level}\nSuggested Fix: {ai_analysis.suggested_fix}", 
     }
 

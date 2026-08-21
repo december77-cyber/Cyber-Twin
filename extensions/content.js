@@ -29,7 +29,7 @@ const input_return = (event) => {
                 }
             }
         )
-        },500)
+        },800)
 
     }
 

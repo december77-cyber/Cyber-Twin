@@ -1,5 +1,3 @@
-const url = "http://127.0.0.1:8000/analyze-post"
-
 const usr_input = document.getElementById("UsrInput")
 const button = document.getElementById("ScanButton")
 const output = document.getElementById("Output")
