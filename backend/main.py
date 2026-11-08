@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Header, Request, Response, Depends
 from pydantic import BaseModel
 import ollama
+from enum import Enum
 from sqlmodel import SQLModel, Session, create_engine, Field, select, or_
 from sub_models import UserData, Location, Relations, Assets, Schedule
 
@@ -85,7 +86,8 @@ def analyze_post(data: CheckInput, cyber_twin_key= Header(alias="Cyber-Twin-Key"
     user_context = create_user_context(session)
 
     print(f"User context created successfully: {user_context}")
-    
+
+    print(UserData.model_json_schema())
     response = ollama.chat(
     model='llama3.1:8b',
     format=UserData.model_json_schema(),
@@ -146,16 +148,17 @@ User data that you should take into account: are in here "{user_context}"
 )
     
     ai_analysis = response['message']['content']
+    print("RAW OLLAMA JSON:", ai_analysis)
     ai_analysis = UserData.model_validate_json(ai_analysis)
 
     for location in ai_analysis.locations:
-        session.add(location)
+        session.merge(location)
     for relation in ai_analysis.relationships:
-        session.add(relation)
+        session.merge(relation)
     for asset in ai_analysis.assets:
-        session.add(asset)
+        session.merge(asset)
     for schedule in ai_analysis.schedule:
-        session.add(schedule)
+        session.merge(schedule)
     session.commit()
 
     print(f"AI analysis completed successfully: {ai_analysis}")
